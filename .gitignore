@@ -1,0 +1,9 @@
+# Xcode
+#
+# gitignore
+
+.DS_Store
+/.build
+/Packages
+/*.xcodeproj
+xcuserdata/
