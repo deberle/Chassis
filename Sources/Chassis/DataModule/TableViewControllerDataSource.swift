@@ -1,6 +1,6 @@
 //
-//  TableViewControllerDataSource.swift
-//  Chassis
+//  TableViewDataSource.swift
+//  PTC_Traditional
 //
 //  Created by Daniel Eberle on 12.09.20.
 //
@@ -10,23 +10,26 @@ import UIKit
 import CoreData
 
 
-class TableViewControllerDataSource<T: NSManagedObject>: UITableViewDiffableDataSource<String, NSManagedObjectID>, NSFetchedResultsControllerDelegate {
+open class TableViewDataSource<T: NSManagedObject>: UITableViewDiffableDataSource<String, NSManagedObjectID>, NSFetchedResultsControllerDelegate {
 
     var setupInProgress = true
     let objectContext: NSManagedObjectContext
     var sortDescriptors: [NSSortDescriptor]
+    var predicate: NSPredicate?
 
-    init(tableView: UITableView,
+    public init(tableView: UITableView,
          objectContext: NSManagedObjectContext,
          sortDescriptors: [NSSortDescriptor],
+         predicate: NSPredicate? = nil,
          cellProvider: @escaping UITableViewDiffableDataSource<String, NSManagedObjectID>.CellProvider) {
 
         self.objectContext = objectContext
         self.sortDescriptors = sortDescriptors
+        self.predicate = predicate
         super.init(tableView: tableView, cellProvider: cellProvider)
     }
-    
-    func performInitialFetch() {
+
+    open func performInitialFetch() {
 
         do {
 
@@ -40,8 +43,8 @@ class TableViewControllerDataSource<T: NSManagedObject>: UITableViewDiffableData
             fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
         }
     }
-
-
+    
+    
     // MARK: - FRC
     
     lazy var fetchedResultsController: NSFetchedResultsController<T> = {
@@ -49,17 +52,17 @@ class TableViewControllerDataSource<T: NSManagedObject>: UITableViewDiffableData
         let fetchRequest: NSFetchRequest<T> = T.fetchRequest() as! NSFetchRequest<T>
         fetchRequest.fetchBatchSize = 20
         fetchRequest.sortDescriptors = self.sortDescriptors
+        fetchRequest.predicate = self.predicate
 
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
                                                                   managedObjectContext: self.objectContext,
                                                                   sectionNameKeyPath: nil,
                                                                   cacheName: "Master")
         fetchedResultsController.delegate = self
-
         return fetchedResultsController
     }()
     
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference) {
+    open func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference) {
 
         self.apply(snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>, animatingDifferences: !setupInProgress)
     }
@@ -67,12 +70,13 @@ class TableViewControllerDataSource<T: NSManagedObject>: UITableViewDiffableData
     
     // MARK: - UITableViewDataSource
     
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+    open override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
 
         return true
     }
     
     @objc open override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+
         if editingStyle == .delete {
 
             guard let objectID = self.itemIdentifier(for: indexPath) else { return }
