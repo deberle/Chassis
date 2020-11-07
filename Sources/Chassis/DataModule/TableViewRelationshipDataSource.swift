@@ -78,7 +78,7 @@ class TableViewRelationshipDataSource<T: NSManagedObject>: UITableViewDiffableDa
               , let inverseIsToMany = self.inverseIsToMany else { return }
 
         if let updated = notification.userInfo?[NSUpdatedObjectsKey] as? Set<NSManagedObject>
-           , let objects = updated.filter( { object in
+           , let _ = updated.filter( { object in
             if inverseIsToMany {
 
                 if let inverseRelationships = object.value(forKey: inverseRelationshipName) as? NSSet {

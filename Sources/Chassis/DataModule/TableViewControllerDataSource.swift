@@ -12,7 +12,8 @@ import CoreData
 
 open class TableViewDataSource<T: NSManagedObject>: UITableViewDiffableDataSource<String, NSManagedObjectID>, NSFetchedResultsControllerDelegate {
 
-    var setupInProgress = true
+    var bulkOperationInProgress = true
+    var ignoreUpdates = false
     let objectContext: NSManagedObjectContext
     var sortDescriptors: [NSSortDescriptor]
     var predicate: NSPredicate?
@@ -34,7 +35,7 @@ open class TableViewDataSource<T: NSManagedObject>: UITableViewDiffableDataSourc
         do {
 
             try self.fetchedResultsController.performFetch()
-            self.setupInProgress = false
+            self.bulkOperationInProgress = false
         } catch {
 
             // Replace this implementation with code to handle the error appropriately.
@@ -64,11 +65,38 @@ open class TableViewDataSource<T: NSManagedObject>: UITableViewDiffableDataSourc
     
     open func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference) {
 
-        self.apply(snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>, animatingDifferences: !setupInProgress)
+        self.apply(snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>, animatingDifferences: !bulkOperationInProgress)
     }
     
     
     // MARK: - UITableViewDataSource
+    
+    open override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+
+        guard let objectID = self.itemIdentifier(for: sourceIndexPath),
+              let object = try? self.objectContext.existingObject(with: objectID) as? T,
+              var objects = self.fetchedResultsController.fetchedObjects else { return }
+
+        objects.remove(at: sourceIndexPath.row)
+        objects.insert(object, at: destinationIndexPath.row)
+
+        bulkOperationInProgress = true
+        
+        for (index, item) in objects.enumerated() {
+
+            item.setValue(index, forKeyPath: "sortOrder")
+        }
+        objectContext.refreshAllObjects()
+        bulkOperationInProgress = false
+    }
+    
+    open override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+
+        return T.entity().attributesByName["sortOrder"] != nil
+            && fetchedResultsController.fetchedObjects?.count ?? 0 > 1
+    }
+    
+
     
     open override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
 

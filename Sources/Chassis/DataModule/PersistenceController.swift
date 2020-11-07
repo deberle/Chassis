@@ -9,13 +9,20 @@ import CoreData
 import UIKit
 
 
+public typealias UpdateBlock = (NSManagedObject) -> ()
 open class DataEvent: UIEvent {
     
-    let objectID: NSManagedObjectID
-    
-    init(objectID: NSManagedObjectID) {
-        
+    let objectID: NSManagedObjectID?
+    let updateBlock: UpdateBlock?
+    let ObjectType: NSManagedObject.Type?
+
+    public init(objectID: NSManagedObjectID? = nil,
+                ObjectType: NSManagedObject.Type? = nil,
+                updateBlock: UpdateBlock? = nil) {
+
         self.objectID = objectID
+        self.updateBlock = updateBlock
+        self.ObjectType = ObjectType
         super.init()
     }
 }
@@ -57,7 +64,8 @@ open class PersistenceController: AppModule {
 
     @IBAction public func deleteObject(sender: Any?, event: DataEvent) {
         
-        guard let object = try? container.viewContext.existingObject(with: event.objectID) else { return }
+        guard let objectID = event.objectID,
+              let object = try? container.viewContext.existingObject(with: objectID) else { return }
         container.viewContext.delete(object)
     }
     
@@ -77,6 +85,15 @@ open class PersistenceController: AppModule {
             }
         }
         print("Context saved.")
+    }
+    
+    @IBAction public func createObject(sender: Any?, event: DataEvent) {
+
+        guard let ObjectType = event.ObjectType,
+              let updateBlock = event.updateBlock else { return }
+
+        let newObject = ObjectType.init(context: self.viewContext)
+        updateBlock(newObject)
     }
     
     public func createObject<T: NSManagedObject>() -> T {
