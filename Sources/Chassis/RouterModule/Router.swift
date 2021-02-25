@@ -28,19 +28,26 @@ public class RoutingEvent: UIEvent {
 
 public protocol Route {
 
-    func viewController() -> UIViewController
+    func viewController(router: Router) -> UIViewController
 }
 
 public class Router: AppModule {
+    
+    public let persistenceController: PersistenceController
+    
+    public init(persistenceController: PersistenceController) {
+        self.persistenceController = persistenceController
+        super.init()
+    }
 
     @IBAction public func route(sender: Any?, event: RoutingEvent) {
 
         if let viewController = event.viewController {
-            viewController.navigationController?.pushViewController(event.route.viewController(), animated: event.animated)
+            viewController.navigationController?.pushViewController(event.route.viewController(router: self), animated: event.animated)
         }
         
         if let window = event.window {
-            window.rootViewController = event.route.viewController()
+            window.rootViewController = event.route.viewController(router: self)
         }
     }
 }
