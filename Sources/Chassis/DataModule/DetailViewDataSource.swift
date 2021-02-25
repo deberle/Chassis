@@ -1,6 +1,6 @@
 //
 //  DetailViewDataSource.swift
-//  PTC_Traditional
+//  Chassis
 //
 //  Created by Daniel Eberle on 18.09.20.
 //
