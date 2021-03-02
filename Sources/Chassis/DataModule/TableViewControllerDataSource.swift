@@ -18,6 +18,8 @@ open class TableViewDataSource<T: NSManagedObject>: UITableViewDiffableDataSourc
     var sortDescriptors: [NSSortDescriptor]
     var predicate: NSPredicate?
 
+    public var pauseAnimations = false
+
     public init(tableView: UITableView,
          objectContext: NSManagedObjectContext,
          sortDescriptors: [NSSortDescriptor],
@@ -65,7 +67,7 @@ open class TableViewDataSource<T: NSManagedObject>: UITableViewDiffableDataSourc
     
     open func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference) {
 
-        self.apply(snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>, animatingDifferences: !bulkOperationInProgress)
+        self.apply(snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>, animatingDifferences: !bulkOperationInProgress && !pauseAnimations)
     }
     
     
