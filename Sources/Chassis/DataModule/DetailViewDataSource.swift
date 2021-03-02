@@ -20,10 +20,10 @@ open class DetailViewDataSource<T: NSManagedObject> {
     public typealias ChangeBlock = (T, ChangeType) -> Void
 
     let objectContext: NSManagedObjectContext
-    let objectID: NSManagedObjectID
+    let objectID: NSManagedObjectID?
     let changeBlock: ChangeBlock
 
-    public init(objectContext: NSManagedObjectContext, objectID: NSManagedObjectID,
+    public init(objectContext: NSManagedObjectContext, objectID: NSManagedObjectID?,
          changeBlock: @escaping ChangeBlock) {
 
         self.objectContext = objectContext
@@ -35,10 +35,15 @@ open class DetailViewDataSource<T: NSManagedObject> {
                                                name: .NSManagedObjectContextObjectsDidChange,
                                                object: self.objectContext)
 
-        if let object: T = try? self.objectContext.existingObject(with: self.objectID) as? T {
-
-            self.changeBlock(object, .created)
+        let object: T
+        if let objectID = self.objectID
+           , let o: T = try? self.objectContext.object(with: objectID) as? T {
+            object = o
         }
+        else {
+            object = T.init(context: self.objectContext)
+        }
+        self.changeBlock(object, .created)
     }
 
     @objc func objectsDidChange(_ notification: NSNotification) {
