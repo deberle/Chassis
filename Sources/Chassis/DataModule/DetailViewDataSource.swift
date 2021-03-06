@@ -37,7 +37,7 @@ open class DetailViewDataSource<T: NSManagedObject> {
 
         let object: T
         if let objectID = self.objectID
-           , let o: T = try? self.objectContext.object(with: objectID) as? T {
+           , let o: T = self.objectContext.object(with: objectID) as? T {
             object = o
         }
         else {
