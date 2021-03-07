@@ -34,7 +34,14 @@ open class PersistenceController: AppModule {
     
     let container: NSPersistentContainer
     public var viewContext:  NSManagedObjectContext { container.viewContext }
-    
+
+    public func createChildContext() -> NSManagedObjectContext {
+
+        let childContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        childContext.parent = self.viewContext
+        return childContext
+    }
+
     public init(inMemory: Bool = false, databaseName: String) {
 
         container = NSPersistentContainer(name: databaseName)
