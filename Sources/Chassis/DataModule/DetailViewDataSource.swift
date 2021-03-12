@@ -45,6 +45,11 @@ open class DetailViewDataSource<T: NSManagedObject> {
         }
         self.changeBlock(object, .created)
     }
+    
+    deinit {
+
+        NotificationCenter.default.removeObserver(self)
+    }
 
     @objc func objectsDidChange(_ notification: NSNotification) {
 
