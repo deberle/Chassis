@@ -35,6 +35,8 @@ open class PersistenceController: AppModule {
     let container: NSPersistentContainer
     public var viewContext:  NSManagedObjectContext { container.viewContext }
 
+    public let relationshipObserver: RelationshipObserver!
+
     public func createChildContext() -> NSManagedObjectContext {
 
         let childContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
@@ -65,6 +67,8 @@ open class PersistenceController: AppModule {
                 fatalError("Unresolved error \(error), \(error.userInfo)")
             }
         })
+        self.relationshipObserver = RelationshipObserver(objectContext: container.viewContext)
+        super.init()
     }
 
     // MARK: - Actions
